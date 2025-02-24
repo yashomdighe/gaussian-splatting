@@ -32,6 +32,19 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
     # Set up rasterization configuration
     tanfovx = math.tan(viewpoint_camera.FoVx * 0.5)
     tanfovy = math.tan(viewpoint_camera.FoVy * 0.5)
+    print(f"height: {int(viewpoint_camera.image_height)}")
+    print(f"width: {int(viewpoint_camera.image_width)}")
+    print(f"tanfovx: {tanfovx}")
+    print(f"tanfovy: {tanfovy}")
+    print(f"bgcolor: {bg_color}")
+    print(f"scaling_mod: {scaling_modifier}")
+    print(f"viewmatrix: {viewpoint_camera.world_view_transform}")
+    print(f"projmatrix: {viewpoint_camera.full_proj_transform}")
+    print(f"sh_degree: {pc.active_sh_degree}")
+    print(f"campos: {viewpoint_camera.camera_center}")
+    # print(f"prefiltered: }")
+    print(f"debug: {pipe.debug}")
+
 
     raster_settings = GaussianRasterizationSettings(
         image_height=int(viewpoint_camera.image_height),
@@ -82,6 +95,17 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
         colors_precomp = override_color
 
     # Rasterize visible Gaussians to image, obtain their radii (on screen). 
+    print(f"means3d: {means3D.size()}")
+    print(f"means2d: {means2D.size()}")
+    print(f"shs: {shs.size()}")
+    print(f"colors_precomp: {colors_precomp}")
+    print(f"opacities: {opacity.size()}")
+    print(f"scales: {scales.size()}")
+    print(f"rotations: {rotations.size()}")
+    print(f"cov3D_precomp: {cov3D_precomp}")
+
+    # exit(1)
+
     rendered_image, radii = rasterizer(
         means3D = means3D,
         means2D = means2D,

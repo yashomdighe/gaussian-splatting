@@ -1,11 +1,11 @@
 #!/bin/zsh
 
-# Define the range of indices
+# Define the range of episode indices
 start=0
 end=99
 
 # Define maximum parallel processes
-max_parallel=12
+max_parallel=8
 current_processes=0
 
 # Declare an array to store the pool of ports
@@ -15,7 +15,7 @@ port_pool=()
 generate_port_pool() {
     for ((i = 1; i <= max_parallel; i++)); do
         while true; do
-            port=$((RANDOM % 9000 + 1000))  # Generate a random 4-digit port
+            port=$((RANDOM % 64512 + 1024))  # Ports in the range 1024–65535
             if [[ ! " ${port_pool} " =~ " ${port} " ]]; then
                 port_pool+=($port)  # Add unique port to the pool
                 break
@@ -90,54 +90,41 @@ trap cleanup SIGINT SIGTERM
 for i in {$start..$end}; do
     episode_dir="/home/ydighe/Developer/datasets/gaussian-splatting/slide_block_to_target/variation_0/episode_$i"
 
-    # Check if the directory exists
-    if [[ ! -d "$episode_dir" ]]; then
-        echo "Skipping non-existent directory: $episode_dir"
-        continue
-    fi
+    # Get the list of subdirectories dynamically
+    subdirs=($(find "$episode_dir" -mindepth 1 -maxdepth 1 -type d))
 
-    # Get the list of subdirectories dynamically and find the last one
-    subdirs=($(find "$episode_dir" -mindepth 1 -maxdepth 1 -type d | sort -V))
-    last_subdir=${subdirs[-1]}  # Get the numerically last subdirectory
+    for subdir in $subdirs; do
+        o_path="$subdir/splat"
+        # echo $subdir
+        # echo $o_path
 
-    # Skip if no subdirectories are found
-    if [[ -z "$last_subdir" ]]; then
-        echo "No subdirectories found in: $episode_dir"
-        continue
-    fi
-    # echo $last_subdir
-    o_path="$last_subdir/splat"
-    # echo $o_path
-    # # Add the outer path and its last subdirectory to the JSON file
-    # echo "  \"$episode_dir\": [" >> $output_file
-    # echo "    \"$last_subdir\"" >> $output_file
-    # echo "  ]," >> $output_file
+        # break
+        # # Wait for a process slot to free up
+        wait_for_process_slot
 
-    # Wait for a process slot to free up
-    wait_for_process_slot
+        # Get the next available port
+        port=$(get_next_port)
 
-    # Get the next available port
-    port=$(get_next_port)
+        # Generate a unique log file for this process
+        log_file="logs/episode_${i}_$(basename $subdir)_port_${port}.log"
+        temp_log=$(mktemp)  # Create a temporary log file
 
-    # Generate a unique log file for this process
-    log_file="logs/episode_${i}_last_port_${port}.log"
-    # temp_log=$(mktemp)  # Create a temporary log file
+        # Ensure the logs directory exists
+        mkdir -p logs
 
-    # Ensure the logs directory exists
-    mkdir -p logs
+        # Call the Python script and capture its output in the temporary file
+        echo "Processing $subdir with port $port. Logs will be written to $log_file after completion."
+        sudo rm -rf $o_path
+        python3 train.py -s "$subdir" -m "$o_path" --port "$port" --iterations 7000 >"$log_file" 2>&1 &
 
-    # Call the Python script and capture its output in the temporary file
-    echo "Processing $last_subdir with port $port. Logs will be written to $log_file after completion."
-    sudo rm -rf $o_path
-    python3 train.py -s "$last_subdir" -m "$o_path" --port "$port" --iterations 7000 >"$log_file" 2>&1 &
+        # Track the process ID and associate it with the port
+        pid=$!
+        pids+=($pid)
+        used_ports[$port]=$pid
 
-    # Track the process ID and associate it with the port
-    pid=$!
-    pids+=($pid)
-    used_ports[$port]=$pid
-
-    # Sleep for boot-up time
-    # sleep 5
+        # Sleep for boot-up time
+        # sleep 5
+    done
 done
 
 # Wait for all remaining processes to finish
