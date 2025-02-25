@@ -1,0 +1,1 @@
+Namespace(sh_degree=3, source_path='/home/ydighe/Developer/datasets/gaussian-splatting/slide_block_to_target/variation_0/episode_10/25', model_path='./test', images='images', resolution=-1, white_background=False, data_device='cuda', eval=False)
