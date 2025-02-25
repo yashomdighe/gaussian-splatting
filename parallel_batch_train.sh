@@ -5,7 +5,7 @@ start=10
 end=20
 
 # Define maximum parallel processes
-max_parallel=15
+max_parallel=8
 current_processes=0
 
 # Declare an array to store the pool of ports
@@ -89,8 +89,8 @@ trap cleanup SIGINT SIGTERM
 # Main processing loop
 for i in {$start..$end}; do
     for j in {10..100..10}; do
-        i_path="/home/ydighe/Developer/datasets/gaussian-splatting/slide_block_to_target/variation_0/episode_$i/$j"
-        o_path="/home/ydighe/Developer/datasets/gaussian-splatting/slide_block_to_target/variation_0/episode_$i/$j/splat"
+        o_path="/home/yashom/Developer/datasets/gaussian-splatting/slide_block_to_target/variation_0/episode_$i/$j/splat"
+        i_path="/home/yashom/Developer/datasets/gaussian-splatting/slide_block_to_target/variation_0/episode_$i/$j"
 
         # Wait for a process slot to free up
         wait_for_process_slot
