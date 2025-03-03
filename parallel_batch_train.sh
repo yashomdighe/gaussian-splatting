@@ -5,11 +5,7 @@ start=0
 end=99
 
 # Define maximum parallel processes
-<<<<<<< HEAD
 max_parallel=8
-=======
-max_parallel=12
->>>>>>> 5ed2cb59918add4e020a69f06902ee2107f4c110
 current_processes=0
 
 # Declare an array to store the pool of ports
@@ -92,38 +88,6 @@ trap cleanup SIGINT SIGTERM
 
 # Main processing loop
 for i in {$start..$end}; do
-<<<<<<< HEAD
-    for j in {10..100..10}; do
-        o_path="/home/yashom/Developer/datasets/gaussian-splatting/slide_block_to_target/variation_0/episode_$i/$j/splat"
-        i_path="/home/yashom/Developer/datasets/gaussian-splatting/slide_block_to_target/variation_0/episode_$i/$j"
-
-        # Wait for a process slot to free up
-        wait_for_process_slot
-
-        # Get the next available port
-        port=$(get_next_port)
-
-        # Generate a unique log file for this process
-        log_file="logs/episode_${i}_step_${j}_port_${port}.log"
-        temp_log=$(mktemp)  # Create a temporary log file
-
-        # Ensure the logs directory exists
-        mkdir -p logs
-
-        # Call the Python script and capture its output in the temporary file
-        echo "Processing $i_path with port $port. Logs will be written to $log_file after completion."
-        sudo rm -rf $o_path
-        (python3 train.py -s "$i_path" -m "$o_path" --port "$port" --iterations 7000 >"$temp_log" 2>&1 && mv "$temp_log" "$log_file") &
-
-        # Track the process ID and associate it with the port
-        pid=$!
-        pids+=($pid)
-        used_ports[$port]=$pid
-
-        # Sleep for boot-up time
-        # sleep 5
-    done
-=======
     episode_dir="/home/ydighe/Developer/datasets/gaussian-splatting/slide_block_to_target/variation_0/episode_$i"
 
     # Check if the directory exists
@@ -174,7 +138,6 @@ for i in {$start..$end}; do
 
     # Sleep for boot-up time
     # sleep 5
->>>>>>> 5ed2cb59918add4e020a69f06902ee2107f4c110
 done
 
 # Wait for all remaining processes to finish
