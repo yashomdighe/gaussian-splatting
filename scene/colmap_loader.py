@@ -103,6 +103,7 @@ def read_points3D_text(path):
     xyzs = np.empty((num_points, 3))
     rgbs = np.empty((num_points, 3))
     errors = np.empty((num_points, 1))
+    masks = np.empty((num_points, 1))
     count = 0
     with open(path, "r") as fid:
         while True:
@@ -115,12 +116,14 @@ def read_points3D_text(path):
                 xyz = np.array(tuple(map(float, elems[1:4])))
                 rgb = np.array(tuple(map(int, elems[4:7])))
                 error = np.array(float(elems[7]))
+                mask = np.array(float(elems[8]))
                 xyzs[count] = xyz
                 rgbs[count] = rgb
                 errors[count] = error
+                masks[count] = mask
                 count += 1
 
-    return xyzs, rgbs, errors
+    return xyzs, rgbs, masks ,errors
 
 def read_points3D_binary(path_to_model_file):
     """
