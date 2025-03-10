@@ -191,6 +191,7 @@ class GaussianModel:
             l.append('scale_{}'.format(i))
         for i in range(self._rotation.shape[1]):
             l.append('rot_{}'.format(i))
+        l.append('mask')
         return l
 
     def save_ply(self, path):
@@ -208,7 +209,7 @@ class GaussianModel:
         dtype_full = [(attribute, 'f4') for attribute in self.construct_list_of_attributes()]
 
         elements = np.empty(xyz.shape[0], dtype=dtype_full)
-        attributes = np.concatenate((xyz, normals, f_dc, f_rest, opacities, scale, rotation, mask), axis=1)
+        attributes = np.concatenate((xyz, normals, f_dc, f_rest, opacities, scale, rotation, mask.reshape(-1, 1)), axis=1)
         elements[:] = list(map(tuple, attributes))
         el = PlyElement.describe(elements, 'vertex')
         PlyData([el]).write(path)
@@ -310,6 +311,7 @@ class GaussianModel:
 
         self.denom = self.denom[valid_points_mask]
         self.max_radii2D = self.max_radii2D[valid_points_mask]
+        self._mask = self._mask[valid_points_mask]
 
     def cat_tensors_to_optimizer(self, tensors_dict):
         optimizable_tensors = {}
@@ -350,7 +352,7 @@ class GaussianModel:
         self._scaling = optimizable_tensors["scaling"]
         self._rotation = optimizable_tensors["rotation"]
 
-        print(f" In postfix: {self._mask.shape, new_mask.shape, new_xyz.shape}")
+        # print(f"In postfix: {self._mask.shape, new_mask.shape, new_xyz.shape}")
 
         self._mask = torch.cat((self._mask, new_mask), dim=0).requires_grad_(False)
         
@@ -378,10 +380,12 @@ class GaussianModel:
         new_features_dc = self._features_dc[selected_pts_mask].repeat(N,1,1)
         new_features_rest = self._features_rest[selected_pts_mask].repeat(N,1,1)
         new_opacity = self._opacity[selected_pts_mask].repeat(N,1)
-        new_mask = self._mask[selected_pts_mask].repeat(1,)
-
+        new_mask = self._mask[selected_pts_mask].repeat(N,)
+        
         # print(selected_pts_mask.shape)
-        print(f"In split: {new_mask.shape}, {new_xyz.shape}")
+        # print(f"opacity : {new_opacity.shape}, {self._opacity[selected_pts_mask].shape}")
+        # print(sel[selected_pts_mask].shape)
+        # print(f"In split: {new_mask.shape}, {new_xyz.shape}, {torch.sum(selected_pts_mask)}")
         # print(new_mask.shape)
         # print(new_xyz.shape)
         # print(self._xyz.shape)
@@ -402,7 +406,7 @@ class GaussianModel:
         new_xyz = self._xyz[selected_pts_mask]
         new_mask = self._mask[selected_pts_mask]
 
-        print(f"In clone: {new_mask.shape}, {new_xyz.shape}")
+        # print(f"In clone: {new_mask.shape}, {new_xyz.shape}")
         # print(new_mask.shape)
         # print(new_xyz.shape)
 
@@ -418,11 +422,11 @@ class GaussianModel:
         grads = self.xyz_gradient_accum / self.denom
         grads[grads.isnan()] = 0.0
 
-        print(f"before clone: {self._mask.shape}")
+        # print(f"Before clone: {self._mask.shape}")
         self.densify_and_clone(grads, max_grad, extent)
-        print(f"after clone before split: {self._mask.shape}")
+        # print(f"After clone before split: {self._mask.shape}")
         self.densify_and_split(grads, max_grad, extent)
-        print(f"after split: {self._mask.shape}")
+        # print(f"After split: {self._mask.shape}")
 
         prune_mask = (self.get_opacity < min_opacity).squeeze()
         if max_screen_size:
