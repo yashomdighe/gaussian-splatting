@@ -106,6 +106,10 @@ class GaussianModel:
     @property
     def get_xyz(self):
         return self._xyz
+
+    @property
+    def get_mask(self):
+        return self._mask
     
     @property
     def get_features(self):
@@ -260,7 +264,7 @@ class GaussianModel:
         self._opacity = nn.Parameter(torch.tensor(opacities, dtype=torch.float, device="cuda").requires_grad_(True))
         self._scaling = nn.Parameter(torch.tensor(scales, dtype=torch.float, device="cuda").requires_grad_(True))
         self._rotation = nn.Parameter(torch.tensor(rots, dtype=torch.float, device="cuda").requires_grad_(True))
-        self._mask = nn.parameter(torch.tensor(mask, dtype=torch.float, device='cuda').requires_grad_(False))
+        self._mask = nn.Parameter(torch.tensor(mask, dtype=torch.float, device='cuda').requires_grad_(False))
         self.active_sh_degree = self.max_sh_degree
 
     def replace_tensor_to_optimizer(self, tensor, name):

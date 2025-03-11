@@ -88,7 +88,7 @@ trap cleanup SIGINT SIGTERM
 
 # Main processing loop
 for i in {$start..$end}; do
-    episode_dir="/home/ydighe/Developer/datasets/gaussian-splatting/slide_block_to_target/variation_0/episode_$i"
+    episode_dir="/media/yashom/expansion/datasets/gaussian-splatting-masked/slide_block_to_target/variation_0/episode_$i"
 
     # Get the list of subdirectories dynamically
     subdirs=($(find "$episode_dir" -mindepth 1 -maxdepth 1 -type d))
